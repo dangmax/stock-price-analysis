@@ -34,5 +34,24 @@ the predict service may give a future stock price through the machine learning m
 ## Design  Diagram
 ![Syetem design diagram](/stock-service-diagram.jpg "flow diagram")
 
+## Detail  Design
+#### 1. Stock Crawl Serivice
+* use python scrapy crawl stock price
+* define the table field(price,quantity,market value,pe,date,pb)
+* db use mysql
+
+#### 2. Data Parse Serivice
+* java project query stock info in mysql db
+* visualize stock info with front end technology
+* make stack price info item as a message and put it into rabbitmq
+
+#### 3. Data Parse Serivice
+* java project query stock info in mysql db
+* visualize stock info with front end technology
+* make stack price info item as a message and put it into rabbitmq
+
+#### 4. Stock Analysis Serivice
+* train model with test data 
+* consume message and predict the future price
 
 
