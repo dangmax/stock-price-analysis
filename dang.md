@@ -36,22 +36,17 @@ the predict service may give a future stock price through the machine learning m
 
 ## Detail  Design
 #### 1. Stock Crawl Serivice
-* use python scrapy crawl stock price
-* define the table field(price,quantity,market value,pe,date,pb)
-* db use mysql
+* --use python scrapy crawl stock price
+* use python tushare api to crawl stock price
+* define the table field(close,low,open,high,column,date)
+* db use mysql to store stock history info
 
 #### 2. Data Parse Serivice
-* java project query stock info in mysql db
-* visualize stock info with front end technology
-* make stack price info item as a message and put it into rabbitmq
+* use python to query stock info in mysql db
+* visualize stock history close price with matplotlib or echarts. 
+* query yestoday stack info and make it as a message and put it into rabbitmq
 
-#### 3. Data Parse Serivice
-* java project query stock info in mysql db
-* visualize stock info with front end technology
-* make stack price info item as a message and put it into rabbitmq
-
-#### 4. Stock Analysis Serivice
-* train model with test data 
-* consume message and predict the future price
-
+#### 3. Stock Analysis Serivice
+* query stock history info & train model
+* consume message(yestoday stock price) with training model to predict the future price
 
