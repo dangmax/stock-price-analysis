@@ -32,7 +32,7 @@ the parse service may deal with the crawled stock info and make it simple to dis
 the predict service may give a future stock price through the machine learning model 
 ```
 ## Design  Diagram
-![Syetem design diagram](/stock-service-diagram.jpg "flow diagram")
+![Syetem design diagram](/stock-service-diagram1.jpg "flow diagram")
 
 ## Detail  Design
 #### 1. Stock Crawl Serivice
