@@ -38,7 +38,7 @@ the predict service may give a future stock price through the machine learning m
 #### 1. Stock Crawl Serivice
 * --use python scrapy crawl stock price
 * use python tushare api to crawl stock price
-* define the table field(close,low,open,high,column,date)
+* define the table field(close,open,high,low,volume,amount)
 * db use mysql to store stock history info
 
 #### 2. Data Parse Serivice
