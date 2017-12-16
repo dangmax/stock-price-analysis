@@ -55,7 +55,7 @@ the predict service may give a future stock price through the machine learning m
 (1) echarts is a open sourced js lib with baidu
 (2) include echarts js in html template  and send the stock data 
 (3) echarts can display the stock data in a k-line
-![Syetem design diagram](/kline.jpg "kline diagram")
+![Syetem design diagram](/kline.JPG "kline diagram")
 
 #### 3. Stock Analysis Serivice
 * train model
