@@ -103,6 +103,7 @@ D-->F[Fit Model]
 E-->F[Fit Model]
 F-->G[Predict Result]
 ```
+![image](./train_model.JPG)
 1. select features
    1. hl_pct = (high-low)/low*100.0
    2. ma5_ma10_pct = ma5/ma10*100.0
