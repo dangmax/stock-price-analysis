@@ -30,9 +30,9 @@ def query_hist(request):
             listma10 = []
             listma20 = []
             today = []
-            result = Stock.objects.filter(stock_id=name).filter(pub_date__range=(start,end))
+            result = Stock.objects.filter(stock_id=name).filter(pub_date__range=(start,end)).order_by('id')
             if result.count()!= 0:
-                today_stock_info = Stock.objects.filter(stock_id=name).first()
+                today_stock_info = Stock.objects.filter(stock_id=name).last()
                 today.append(today_stock_info.vol)
                 today.append(today_stock_info.high)
                 today.append(today_stock_info.low)
@@ -60,7 +60,8 @@ def query_hist(request):
                 cons = ts.get_apis()
                 # df = ts.get_h_data(name, start=start, end=end)
                 df = ts.bar(name, conn=cons, freq='D', start_date=start, ma=[5, 10, 20],factors=['vr', 'tor'])
-                today_stock_info = df[0:1]
+                df = df.sort_index();
+                today_stock_info = df[-1:]
                 today.append(today_stock_info['vol'][0])
                 today.append(today_stock_info['high'][0])
                 today.append(today_stock_info['low'][0])
@@ -114,13 +115,13 @@ def query_hist(request):
             #predict tomorrow
             close_predict = pre_price(name,today)
             cond = pre_cond(name, today)
-			if cond ==1:
-			    cond = '涨'
-			elif cond==-1:
-                cond = '跌'
+            if cond==1:
+                gaga = '涨'
+            elif cond==-1:
+                gaga = '跌'
             else:
-                cond = '平'			
-            return render_to_response('kline.html',{'data0':data0,'close_predict':close_predict,'cond':cond,'stock_name':stock_name,
+                gaga = '平'
+            return render_to_response('kline.html',{'data0':data0,'close_predict':close_predict,'cond':gaga,'stock_name':stock_name,
                                                     'listma5':listma5,'listma10':listma10,'listma20':listma20})
     if request.method == 'GET':
         form = StockForms()
@@ -128,6 +129,7 @@ def query_hist(request):
 
 # predict tomorrow close price with model
 def pre_price(name,today):
+    #print 'today: ',today
     hl_pct = (today[1]-today[2])/today[2]*100.0
     ch_pct = (today[4]-today[3])/today[3]*100.0
     ma5_close_pct = (today[4]-today[7])/today[7]*100.0
@@ -145,6 +147,7 @@ def pre_price(name,today):
     today.append(today_info)
     # print 'today: ',today
     #load model
+    #print 'today: ', today
     clf = joblib.load('models/val_'+name+'_clf.pkl')
     close_predict = clf.predict(today)
     return close_predict
@@ -201,8 +204,8 @@ def train_value_model(name,data):
     y_test_predicts = clf.predict(x_test)
     mse = sum((y_test-y_test_predicts)**2)
     mse /=  len(y_test_predicts)
-    print 'mse: ',mse
-    print 'score: ',clf.score(x_test,y_test)
+    print 'value mse: ',mse
+    print 'value score: ',clf.score(x_test,y_test)
     joblib.dump(clf,'models/val_'+name+'_clf.pkl')
 
 def train_cond_model(name, data):
@@ -233,6 +236,6 @@ def train_cond_model(name, data):
     y_test_predicts = clf.predict(x_test)
     mse = sum((y_test - y_test_predicts) ** 2)
     mse /= len(y_test_predicts)
-    print 'mse: ', mse
-    print 'score: ', clf.score(x_test, y_test)
+    print 'cond mse: ', mse
+    print 'cond score: ', clf.score(x_test, y_test)
     joblib.dump(clf, 'models/cond_' + name + '_clf.pkl')
