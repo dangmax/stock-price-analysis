@@ -28,7 +28,7 @@ the predict service train the stock model with the history data,and may predict 
 ![Syetem design diagram](./stock-service-diagram.jpg "flow diagram")
 
 ## Detail  Design
-#### 1. Stock Crawl Serivice
+#### 1. Stock Crawl Service
 * use Django to make a python-web application
 1. the index page is a html template (user can input stock_id,start_time,end_time).
 * use python tushare api to crawl stock history price
@@ -115,6 +115,7 @@ F-->G[Predict Result]
    1. 70% data for training
    2. 30% data for test
    3. save 2 models for predict
+
 ``` python
 clf = Ridge()
 x_train,x_test,y_train,y_test = train_test_split(x,y,test_size=0.3)
@@ -122,13 +123,27 @@ clf.fit(x_train,y_train)
 clf.score(x_test,y_test)
 joblib.dump(clf,"ridge_clf.pkl")
 ```
+4. evaluate model effect
+   1. model.score()
+   2. MSE
+``` python
+y_test_predicts = clf.predict(x_test)
+mse = sum((y_test-y_test_predicts)**2)
+mse /=  len(y_test_predicts)
+print 'mse: ',mse
+print 'score: ',clf.score(x_test,y_test)
+```
+
 * predict the tomorrow close price
 1. generated today features
 2. call predict method to get tomorrow price
 ``` python
-#load model
-clf   = joblib.load("ridge_clf.pkl")
+#load price model
+clf   = joblib.load("models/val_"+name+"_clf.pkl")
 close = clf.predict(today_info)
+#load trend model
+clf = joblib.load("models/cond_"+name+"_clf.pkl")
+cond = clf.predict(today_info)
 ```
 ## Future  Work
 - crawl data may change to scripy for crawling more stock hist info fields
