@@ -8,6 +8,7 @@ from stock_analyse.models import Stock
 import math
 from sklearn.linear_model import Ridge
 from sklearn import svm
+from sklearn.svm import LinearSVC
 from sklearn.model_selection import train_test_split
 import csv
 from sklearn.externals import joblib
@@ -112,16 +113,18 @@ def query_hist(request):
                 #training model
                 train_value_model(name,data0)
                 train_cond_model(name, data0)
+                train_buy_model(name,data0)
             #predict tomorrow
             close_predict = pre_price(name,today)
             cond = pre_cond(name, today)
+            buy  = pre_buy(name,today)
             if cond==1:
                 gaga = '涨'
             elif cond==-1:
                 gaga = '跌'
             else:
                 gaga = '平'
-            return render_to_response('kline.html',{'data0':data0,'close_predict':close_predict,'cond':gaga,'stock_name':stock_name,
+            return render_to_response('kline.html',{'data0':data0,'close_predict':close_predict,'cond':gaga,'buy':buy,'stock_name':stock_name,
                                                     'listma5':listma5,'listma10':listma10,'listma20':listma20})
     if request.method == 'GET':
         form = StockForms()
@@ -174,6 +177,30 @@ def pre_cond(name,today):
     clf = joblib.load('models/cond_'+name+'_clf.pkl')
     cond = clf.predict(today)
     return cond
+
+# predict tomorrow cond with model
+def pre_buy(name,today):
+    hl_pct = (today[1]-today[2])/today[2]*100.0
+    ch_pct = (today[4]-today[3])/today[3]*100.0
+    ma5_close_pct = (today[4]-today[7])/today[7]*100.0
+    ma5_ma10_pct  = (today[7]/today[8])*100.0
+    close_open    = today[4]-today[3]
+    today_info = []
+    today_info.append(ch_pct)
+    today_info.append(hl_pct)
+    today_info.append(today[6])
+    today_info.append(today[5])
+    today_info.append(today[0])
+    today_info.append(ma5_close_pct)
+    today_info.append(close_open)
+    today_info.append(ma5_ma10_pct)
+    today = []
+    today.append(today_info)
+    # print 'today: ',today
+    #load model
+    clf = joblib.load('models/buy_'+name+'_clf.pkl')
+    buy = clf.predict(today)
+    return buy
 
 # def gen_csv(name,data0):
 #     with open('data/'+name+".csv","wb") as csvfile:
@@ -239,3 +266,53 @@ def train_cond_model(name, data):
     print 'cond mse: ', mse
     print 'cond score: ', clf.score(x_test, y_test)
     joblib.dump(clf, 'models/cond_' + name + '_clf.pkl')
+
+def train_buy_model(name,data):
+    f = pd.DataFrame(data,columns=['pub_date','open','close','low','high','amount','vol','tor','vr','ma5','ma10'])
+    x_data = []
+    y_data = []
+    for ix,row in f.iterrows():
+        x_feature = []
+        close = row['close']
+        open  = row['open']
+        high  = row['high']
+        low   = row['low']
+        vr    = row['vr']
+        tor   = row['tor']
+        ma5   = row['ma5']
+        ma10  = row['ma10']
+        vol   = row['vol']
+        close_change_rate = (close - open) / open
+        low_change_rate = (high - low) / low
+        ma5_close = ma5 - close
+        close_open = close - open
+        ma5_ma10 = ma5 - ma10
+        x_feature.append(close_change_rate)
+        x_feature.append(low_change_rate)
+        x_feature.append(vr)
+        x_feature.append(tor)
+        x_feature.append(vol)
+        x_feature.append(ma5_close)
+        x_feature.append(close_open)
+        x_feature.append(ma5_ma10)
+        x_data.append(x_feature)
+        # get label y
+        if ma5_ma10 <= 0 and close_open > 0 and ma5_close >= 0:
+            # print 'eq 1 x:',x_feature
+            y_data.append(1)
+        elif ma5_ma10 >= 0 and close_open < 0 and ma5_close >= 0:
+            # print 'eq -1 x:',x_feature
+            y_data.append(-1)
+        else:
+            y_data.append(0)
+
+    # linear svc
+    clf = LinearSVC()  # score: 0.7480   little
+    x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.3)
+    clf.fit(x_train, y_train)
+    y_test_predicts = clf.predict(x_test)
+    mse = sum((y_test - y_test_predicts) ** 2)
+    mse /= len(y_test_predicts)
+    print 'buy mse: ', mse
+    print 'buy score: ', clf.score(x_test, y_test)
+    joblib.dump(clf, 'models/buy_' + name + '_clf.pkl')

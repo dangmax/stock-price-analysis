@@ -99,8 +99,10 @@ A[Query Hist Data]-->B(Select Features)
 B(Select Features)-->C{Select Models}
 C-->|Regression|D[RidgeRegression]
 C-->|Classification|E[SVC]
+C-->|Classification|H[LinearSVC]
 D-->F[Fit Model]
 E-->F[Fit Model]
+H-->F[Fit Model]
 F-->G[Predict Result]
 ```
 ![image](./train_model.JPG)
@@ -109,8 +111,9 @@ F-->G[Predict Result]
    2. ma5_ma10_pct = ma5/ma10*100.0
    3. vol
 2. select models
-   1. ridgeRegression(predict value)
-   2. svc(classification)
+   1. ridgeRegression(predict tomorrow close value)
+   2. svc(classification predict tomorrow trend)
+   3. linearsvc(classification predict whether today is a buy-point)
 3. fit model
    1. 70% data for training
    2. 30% data for test
@@ -151,3 +154,4 @@ cond = clf.predict(today_info)
 - compare different models predict result,choose the better one
 - Now the crawl service and predict service is online,may change them to offline service,especially  we can use
 a timed task to crawl data every day
+- can predict tomorrow price with a window history info(e.g. week,month)
